@@ -21,23 +21,51 @@ public class Main {
         "https://www.neonet.pl/konsole-i-gry/nintendo-switch-lite-grey.html"
     ));
 
+    final List<String> USER_AGENTS = new ArrayList<>(List.of(
+        "python-requests/2.28.2",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
+    ));
+
     System.out.println("Nintendo Switch Lite:");
 
-//    String euroPrice = getPriceEuro(URLS.get(0));
-//    System.out.println("euro.com.pl -> " + euroPrice + " zł");
-//
-//    String mediaMarktPrice = getPriceMediaMarkt(URLS.get(1));
-//    System.out.println("mediamarkt.pl -> " + mediaMarktPrice + " zł");
-//
-//    String xkomPrice = getPriceXkom(URLS.get(2));
-//    System.out.println("x-kom.pl -> " + xkomPrice + " zł");
-//
-//    String morelePrice = getPriceMorele(URLS.get(3));
-//    System.out.println("morele.net -> " + morelePrice + " zł");
+    String euroPrice = getPriceJson(URLS.get(0), USER_AGENTS.get(0));
+    System.out.println("euro.com.pl -> " + euroPrice + " zł");
 
-//    String amazonPrice = getPriceAmazon(URLS.get(4));
-//    System.out.println("amazon.pl -> " + amazonPrice + " zł");
+    String mediaMarktPrice = getPriceJson(URLS.get(1), USER_AGENTS.get(1));
+    System.out.println("mediamarkt.pl -> " + mediaMarktPrice + " zł");
 
+    String xkomPrice = getPriceJson(URLS.get(2), USER_AGENTS.get(1));
+    System.out.println("x-kom.pl -> " + xkomPrice + " zł");
+
+    String morelePrice = getPriceMorele(URLS.get(3));
+    System.out.println("morele.net -> " + morelePrice + " zł");
+
+    String amazonPrice = getPriceAmazon(URLS.get(4));
+    System.out.println("amazon.pl -> " + amazonPrice + " zł");
+  }
+
+  public static String getPriceJson(String url, String userAgent) {
+    try {
+      Document doc = Jsoup
+          .connect(url)
+          .userAgent(userAgent)
+          .header("Accept-Encoding", "gzip, deflate")
+          .header("Accept", "*/*")
+          .get();
+
+      Elements elements = doc.select("script[type=application/ld+json]");
+
+      for (Element element : elements) {
+        JsonObject jsonData = new Gson().fromJson(element.html(), JsonObject.class);
+        if (!jsonData.has("offers")) continue;
+
+        return jsonData.getAsJsonObject("offers").get("price").getAsString();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    return "0";
   }
 
   public static String getPriceAmazon(String url) {
@@ -74,77 +102,5 @@ public class Main {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  public static String getPriceXkom(String url) {
-    try {
-      Document doc = Jsoup
-          .connect(url)
-          .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
-          .header("Accept-Encoding", "gzip, deflate")
-          .header("Accept", "*/*")
-          .get();
-
-      Elements elements = doc.select("script[type=application/ld+json]");
-
-      for (Element element : elements) {
-        JsonObject jsonData = new Gson().fromJson(element.html(), JsonObject.class);
-        if (!jsonData.has("offers")) continue;
-
-        return jsonData.getAsJsonObject("offers").get("price").getAsString();
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    return "0";
-  }
-
-  public static String getPriceMediaMarkt(String url) {
-    try {
-      Document doc = Jsoup
-        .connect(url)
-        .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
-        .header("Accept-Encoding", "gzip, deflate")
-        .header("Accept", "*/*")
-        .get();
-
-      Elements elements = doc.select("script[type=application/ld+json]");
-
-      for (Element element : elements) {
-          JsonObject jsonData = new Gson().fromJson(element.html(), JsonObject.class);
-          if (!jsonData.has("offers")) continue;
-
-          return jsonData.getAsJsonObject("offers").get("price").getAsString();
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    return "0";
-  }
-
-  public static String getPriceEuro(String url) {
-    try {
-      Document doc = Jsoup
-        .connect(url)
-        .userAgent("python-requests/2.28.2")
-        .header("Accept-Encoding", "gzip, deflate")
-        .header("Accept", "*/*")
-        .get();
-
-      Elements elements = doc.select("script[type=application/ld+json]");
-
-      for (Element element : elements) {
-        JsonObject jsonData = new Gson().fromJson(element.html(), JsonObject.class);
-        if (!jsonData.has("offers")) continue;
-
-        return jsonData.getAsJsonObject("offers").get("price").getAsString();
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    return "0";
   }
 }
