@@ -1,3 +1,9 @@
+package pl.listek.main;
+
+import pl.listek.scrapers.PriceAmazon;
+import pl.listek.scrapers.PriceJson;
+import pl.listek.scrapers.PriceMorele;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;

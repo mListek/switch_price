@@ -1,19 +1,24 @@
+package pl.listek.scrapers;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-public class PriceAmazon implements Callable<String> {
+public class PriceJson implements Callable<String> {
+
   private final String url;
   private final String userAgent;
 
-  public PriceAmazon(String url, String userAgent) {
+  public PriceJson(String url, String userAgent) {
     this.url = url;
     this.userAgent = userAgent;
   }
-
   @Override
   public String call() throws RuntimeException {
     try {
@@ -24,13 +29,18 @@ public class PriceAmazon implements Callable<String> {
           .header("Accept", "*/*")
           .get();
 
-      Element element = doc.selectFirst("span.a-offscreen");
+      Elements elements = doc.select("script[type=application/ld+json]");
 
-      assert element != null;
-      return element.html().replace("&nbsp;", "");
+      for (Element element : elements) {
+        JsonObject jsonData = new Gson().fromJson(element.html(), JsonObject.class);
+        if (!jsonData.has("offers")) continue;
 
+        return jsonData.getAsJsonObject("offers").get("price").getAsString();
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+
+    return "0";
   }
 }
