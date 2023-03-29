@@ -10,15 +10,15 @@ import java.util.concurrent.Callable;
 
 public class PriceJson implements Callable<String> {
 
-  private String url;
-  private String userAgent;
+  private final String url;
+  private final String userAgent;
 
   public PriceJson(String url, String userAgent) {
     this.url = url;
     this.userAgent = userAgent;
   }
   @Override
-  public String call() throws Exception {
+  public String call() throws RuntimeException {
     try {
       Document doc = Jsoup
           .connect(url)
