@@ -59,22 +59,6 @@ public class Main {
       }
     }
 
-
     executorService.shutdown();
-
-//    String euroPrice = getPriceJson(URLS.get(0), USER_AGENTS.get(0));
-//    System.out.println("euro.com.pl -> " + euroPrice + " zł");
-//
-//    String mediaMarktPrice = getPriceJson(URLS.get(1), USER_AGENTS.get(1));
-//    System.out.println("mediamarkt.pl -> " + mediaMarktPrice + " zł");
-//
-//    String xkomPrice = getPriceJson(URLS.get(2), USER_AGENTS.get(1));
-//    System.out.println("x-kom.pl -> " + xkomPrice + " zł");
-//
-//    String morelePrice = getPriceMorele(URLS.get(3));
-//    System.out.println("morele.net -> " + morelePrice + " zł");
-//
-//    String amazonPrice = getPriceAmazon(URLS.get(4));
-//    System.out.println("amazon.pl -> " + amazonPrice + " zł");
   }
 }
