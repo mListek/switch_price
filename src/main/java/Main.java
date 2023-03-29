@@ -1,17 +1,6 @@
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,29 +25,34 @@ public class Main {
       e.printStackTrace();
     }
 
-    System.out.println("Nintendo Switch Lite prices:");
+    System.out.println("Checking prices...");
 
-    List<PriceJson> pricesJson = Collections.synchronizedList(new ArrayList<>());
-    ExecutorService executorService = Executors.newFixedThreadPool(4);
+    ExecutorService executorService = Executors.newFixedThreadPool(5);
+    Map<String, Future<String>> prices = new HashMap<>();
 
     for (String url : URLS) {
-      if (url.contains("mediamarkt.pl") || url.contains("x-kom.pl")) {
+      if (url.contains("mediamarkt.pl")) {
         PriceJson priceJson = new PriceJson(url, USER_AGENTS.get(1));
-        pricesJson.add(priceJson);
+        prices.put("mediamarkt.pl", executorService.submit(priceJson));
+      } else if (url.contains("x-kom.pl")) {
+        PriceJson priceJson = new PriceJson(url, USER_AGENTS.get(1));
+        prices.put("x-kom.pl", executorService.submit(priceJson));
       } else if (url.contains("euro.com.pl")) {
         PriceJson priceJson = new PriceJson(url, USER_AGENTS.get(0));
-        pricesJson.add(priceJson);
+        prices.put("euro.com.pl", executorService.submit(priceJson));
       } else if (url.contains("morele.net")) {
-
+        PriceMorele priceMorele = new PriceMorele(url, USER_AGENTS.get(1));
+        prices.put("morele.net", executorService.submit(priceMorele));
       } else if (url.contains("amazon.pl")) {
-
+        PriceAmazon priceAmazon = new PriceAmazon(url, USER_AGENTS.get(1));
+        prices.put("amazon.pl", executorService.submit(priceAmazon));
       }
     }
 
-    for (PriceJson priceJson : pricesJson) {
-      Future<String> result = executorService.submit(priceJson);
+    for (String storeName : prices.keySet()) {
+      Future<String> price = prices.get(storeName);
       try {
-        System.out.println("Future result euro.com.pl: " + result.get() + " zł");
+        System.out.println(storeName + ": " + price.get() + " zł");
 
       } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
@@ -82,65 +76,5 @@ public class Main {
 //
 //    String amazonPrice = getPriceAmazon(URLS.get(4));
 //    System.out.println("amazon.pl -> " + amazonPrice + " zł");
-  }
-
-  public static String getPriceJson(String url, String userAgent) {
-    try {
-      Document doc = Jsoup
-          .connect(url)
-          .userAgent(userAgent)
-          .header("Accept-Encoding", "gzip, deflate")
-          .header("Accept", "*/*")
-          .get();
-
-      Elements elements = doc.select("script[type=application/ld+json]");
-
-      for (Element element : elements) {
-        JsonObject jsonData = new Gson().fromJson(element.html(), JsonObject.class);
-        if (!jsonData.has("offers")) continue;
-
-        return jsonData.getAsJsonObject("offers").get("price").getAsString();
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    return "0";
-  }
-
-  public static String getPriceAmazon(String url) {
-    try {
-      Document doc = Jsoup
-          .connect(url)
-          .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
-          .header("Accept-Encoding", "gzip, deflate")
-          .header("Accept", "*/*")
-          .get();
-
-      Element element = doc.selectFirst("span.a-offscreen");
-
-      return element.html().replace("&nbsp;", "");
-
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public static String getPriceMorele(String url) {
-    try {
-      Document doc = Jsoup
-          .connect(url)
-          .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
-          .header("Accept-Encoding", "gzip, deflate")
-          .header("Accept", "*/*")
-          .get();
-
-      Element element = doc.selectFirst("div#product_price_brutto");
-
-      return element.attr("content");
-
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
   }
 }
