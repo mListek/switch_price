@@ -30,6 +30,7 @@ public class Main {
     ExecutorService executorService = Executors.newFixedThreadPool(5);
     Map<String, Future<String>> prices = new HashMap<>();
 
+    // submit every url and add results to the map
     for (String url : URLS) {
       if (url.contains("mediamarkt.pl")) {
         PriceJson priceJson = new PriceJson(url, USER_AGENTS.get(1));
@@ -49,6 +50,7 @@ public class Main {
       }
     }
 
+    // get all the future results
     for (String storeName : prices.keySet()) {
       Future<String> price = prices.get(storeName);
       try {
